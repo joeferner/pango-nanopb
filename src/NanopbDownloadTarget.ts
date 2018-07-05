@@ -1,5 +1,4 @@
-import {Target} from "pango";
-import {ProjectOptions, Targets} from "pango/index";
+import {ProjectOptions, Target, Targets} from "pango";
 import {getNanopbOptions, NanopbOptions} from "./NanopbOptions";
 import * as request from "request-promise-native";
 import * as os from "os";

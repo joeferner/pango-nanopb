@@ -2,19 +2,19 @@
   "name": "pango-nanopb",
   "version": "0.0.2",
   "description": "Pango component to run Nanopb .proto to .c",
-  "main": "dist/pango-nanopb/index.js",
+  "main": "dist/index.js",
   "author": "Joe Ferner <joe@fernsroth.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joeferner/pango-nanopb.git"
+  },
   "scripts": {
-    "prepublish": "npm run build",
-    "build": "tsc",
+    "prepare": "tsc",
     "watch": "tsc --watch"
   },
   "devDependencies": {
-    "typescript": "^2.5.3"
-  },
-  "peerDependencies": {
-    "pango": "0.0.x"
+    "typescript": "2.x.x"
   },
   "dependencies": {
     "@types/decompress": "^4.2.3",
@@ -22,8 +22,10 @@
     "@types/request-promise-native": "^1.0.15",
     "decompress": "^4.2.0",
     "fs-extra": "^6.0.1",
-    "pango": "0.0.2",
     "request": "^2.87.0",
-    "request-promise-native": "^1.0.5"
+    "request-promise-native": "^1.0.5",
+    "pango": "0.0.x",
+    "glob": "^7.1.2",
+    "glob-promise": "^3.4.0"
   }
 }

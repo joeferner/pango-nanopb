@@ -1,8 +1,8 @@
-import {ProjectOptions, Shell, Target, Targets} from "pango";
+import {FileUtils, ProjectOptions, Shell, Target, Targets} from "pango";
 import {getNanopbOptions, NanopbOptions} from "./NanopbOptions";
 import * as path from "path";
 import * as fs from "fs-extra";
-import {FileUtils} from "../pango";
+import * as glob from "glob-promise";
 
 export interface NanopbTargetCreateOptions {
     outputDir?: string;
@@ -13,6 +13,7 @@ export class NanopbTarget implements Target {
     private createOptions: NanopbTargetCreateOptions;
 
     preRequisites = ['nanopb-extract'];
+    postRequisites = ['generate-sources'];
 
     constructor(createOptions: NanopbTargetCreateOptions) {
         this.createOptions = createOptions;
@@ -24,12 +25,25 @@ export class NanopbTarget implements Target {
         options.pbFileName = path.join(this.createOptions.outputDir, path.basename(this.createOptions.protoFile) + '.pb');
         await fs.mkdirs(this.createOptions.outputDir);
 
-        console.log('options.pbFileName3', options.pbFileName);
-        console.log('this.createOptions.protoFile', this.createOptions.protoFile);
         if (await FileUtils.isOutputFileOlderThenInputFiles(options.pbFileName, [this.createOptions.protoFile])) {
             await this.runProtoc(options, projectOptions);
             await this.runProtogen(options, projectOptions);
         }
+        await NanopbTarget.copyCommonFiles(options, this.createOptions.outputDir);
+
+        projectOptions.includeDirs = projectOptions.includeDirs || [];
+        projectOptions.includeDirs.push(this.createOptions.outputDir);
+
+        const cFiles = (await glob('*+(.c)', {cwd: this.createOptions.outputDir, dot: true, follow: true}))
+            .map((file) => {
+                const fileName = path.join(this.createOptions.outputDir, file);
+                return {
+                    fileName,
+                    outputPath: fileName + '.o',
+                    depPath: fileName + '.d'
+                };
+            });
+        projectOptions.sourceFiles.push(...cFiles);
     }
 
     private async runProtoc(options: NanopbOptions, projectOptions: ProjectOptions) {
@@ -58,5 +72,24 @@ export class NanopbTarget implements Target {
         };
         projectOptions.logger.info(cmd.join(' '));
         await Shell.shell(projectOptions, cmd, cmdOptions);
+    }
+
+    private static async copyCommonFiles(options: NanopbOptions, outputDir: string) {
+        const fileNames = [
+            'pb.h',
+            'pb_common.c',
+            'pb_common.h',
+            'pb_decode.c',
+            'pb_decode.h',
+            'pb_encode.c',
+            'pb_encode.h'
+        ];
+        for (let fileName of fileNames) {
+            const sourceFile = path.join(options.nanopbPath, fileName);
+            const destFile = path.join(outputDir, fileName);
+            if (await FileUtils.isOutputFileOlderThenInputFiles(destFile, [sourceFile])) {
+                await fs.copy(sourceFile, destFile);
+            }
+        }
     }
 }
