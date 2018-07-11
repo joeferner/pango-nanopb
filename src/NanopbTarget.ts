@@ -29,7 +29,11 @@ export class NanopbTarget implements Target {
         }
         await fs.mkdirs(this.createOptions.outputDir);
 
-        if (await FileUtils.isOutputFileOlderThenInputFiles(options.pbFileName, [this.createOptions.protoFile])) {
+        const deps = [this.createOptions.protoFile];
+        if (options.optionsFile) {
+            deps.push(options.optionsFile);
+        }
+        if (await FileUtils.isOutputFileOlderThenInputFiles(options.pbFileName, deps)) {
             await this.runProtoc(options, projectOptions);
             await this.runProtogen(options, projectOptions);
         }
