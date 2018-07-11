@@ -7,6 +7,7 @@ import * as glob from "glob-promise";
 export interface NanopbTargetCreateOptions {
     outputDir?: string;
     protoFile: string;
+    optionsFile?: string;
 }
 
 export class NanopbTarget implements Target {
@@ -23,6 +24,9 @@ export class NanopbTarget implements Target {
         const options = getNanopbOptions(projectOptions);
         this.createOptions.outputDir = this.createOptions.outputDir || path.join(projectOptions.buildDir, 'nanopb');
         options.pbFileName = path.join(this.createOptions.outputDir, path.basename(this.createOptions.protoFile) + '.pb');
+        if (this.createOptions.optionsFile) {
+            options.optionsFile = this.createOptions.optionsFile;
+        }
         await fs.mkdirs(this.createOptions.outputDir);
 
         if (await FileUtils.isOutputFileOlderThenInputFiles(options.pbFileName, [this.createOptions.protoFile])) {
@@ -64,9 +68,12 @@ export class NanopbTarget implements Target {
         const cmd = [
             'python',
             path.join(options.nanopbPath, 'generator', 'nanopb_generator.py'),
-            `--output-dir=${this.createOptions.outputDir}`,
-            options.pbFileName
+            `--output-dir=${this.createOptions.outputDir}`
         ];
+        if (options.optionsFile) {
+            cmd.push(`--options-file=${options.optionsFile}`);
+        }
+        cmd.push(options.pbFileName);
         const cmdOptions = {
             cwd: path.join(options.nanopbPath, 'generator')
         };

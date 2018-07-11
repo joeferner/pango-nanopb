@@ -8,6 +8,7 @@ export interface NanopbOptions {
     downloadUrl?: string;
     nanopbPath?: string;
     pbFileName?: string;
+    optionsFile?: string;
 }
 
 export function getNanopbOptions(projectOptions: ProjectOptions): NanopbOptions {
